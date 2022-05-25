@@ -14,6 +14,15 @@ During the demo Visual Studio Code will be the IDE in use, with the following pl
 * https://marketplace.visualstudio.com/items?itemName=redhat.apache-camel-extension-pack[Extension Pack for Apache Camel]
 * https://marketplace.visualstudio.com/items?itemName=redhat.vscode-quarkus[Quarkus Plugin]
 
+== Install the Operators
+
+. Red Hat Integration - AMQ Streams
+. Red Hat Integration - Camel K
+
+image::imgs/operator-amq-streams.png[]
+
+image::imgs/operator-camel-k.png[]
+
 == Camel Quarkus
 
 This first part demo will explore some Camel fundamental concepts:
@@ -127,6 +136,8 @@ Install the Camel-K Operator.
 
 As we are going to create a Telegram chatbot you will need to https://core.telegram.org/bots[create a bot] and take a note of your bot `api-key`.
 
+All content that we will need to work is inside the `camel-k` directory. We not need a java project to run the integration with Camel-K, just a single class is enough.
+
 Change the `application.properties` file with your Telegram credentials.
 
 Create the secret in Openshift
@@ -167,9 +178,19 @@ This is a simple bot that allows to receive two actions `joke` and `publish`.
 
 Now, we are going to not only answer back to telegram but also publish into a Kafka topic. 
 
-For it, we need a Kafka cluster running, so deploy https://strimz.io[AMQ Streams] in your Openshift with the name `my-cluster`.
+For it, we need a Kafka cluster running, so deploy https://strimz.io[AMQ Streams] in your Openshift with the name `my-cluster`. For this demo you can use all the default values.
 
-Uncomment the first line `camel.component.kafka.brokers` from the `application.properties` file, and recreate as a secret in Openshift. 
+image::img/kafka-install.png[]
+
+After create a topic, called `my-topic`.
+
+image::img/kafka-topic.png[]
+
+If everything is working fine with your Kafka instance, you must be seeing something like that.
+
+image::img/kafka-installed.png[]
+
+Returning to the application, uncomment the first line `camel.component.kafka.brokers` from the `application.properties` file, and recreate as a secret in Openshift. 
 
     oc delete secret telegram-bot
     oc create secret generic telegram-bot --from-file application.properties
