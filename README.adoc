@@ -1,21 +1,22 @@
-= Red Hat Fuse ( Camel Demo )
+= Camel Demo
 
 This is a simple demo that consist in two parts. 
 
-. The first one using Camel with Quarkus does not describe a real use case but focuses in show some main core concepts of Camel and how easy it enables to create cloud-native integrations.
+. The first one using **Camel with Quarkus** does not describe a real use case but focuses in show some main core concepts of Camel and how easy it enables to create cloud-native integrations.
 
-. The second one is based on an event-driven architecture scenario where we create a Telegram chatbot using Camel-K. 
+. The second one is based on an event-driven architecture scenario where we create a Telegram chatbot using **Camel-K**. 
 It interacts with the user via a chatbot in Telegram and also publishes the messages on a Kafka topic.
 
-
 == Visual Studio Code Plugins
+
+During the demo Visual Studio Code will be the IDE in use, with the following plugins:
 
 * https://marketplace.visualstudio.com/items?itemName=redhat.apache-camel-extension-pack[Extension Pack for Apache Camel]
 * https://marketplace.visualstudio.com/items?itemName=redhat.vscode-quarkus[Quarkus Plugin]
 
 == Camel Quarkus
 
-This demo will explore some Camel fundamental concepts:
+This first part demo will explore some Camel fundamental concepts:
 
 . Bootstrap a Camel Quarkus project
 . Using Camel Components
@@ -38,14 +39,20 @@ Download a quarkus project using the https://code.quarkus.redhat.com[Quarkus boo
 . camel-quarkus-jackson
 . camel-quarkus-jacksonxml
 
- A Camel Router is a class that extends `RouteBuilder` and implements the configure method. Let's focus on the code that really matters at the moment.
+image::imgs/quarkus-bootstrap.png[]
 
+After click on **Generate your application** button, and download the zip. After, unzip it and run the project to see if everything is ok with your environment.
 
-[source,java]
-----
-from("timer:generate")
-  .log("Hello router!");
-----
+    ./mvnw compile quarkus:dev
+
+You also have the option to use the https://quarkus.io/guides/cli-tooling[Quarkus CLI].
+
+Fine, if everything it's fine let's create our first Camel Route.
+
+A Camel Route is a class that extends `RouteBuilder` and implements the configure method. Let's focus on the code that really matters at the moment.
+
+    from("timer:generate")
+        .log("Hello router!");
 
 This code is using the timer component, with all default configurations, it will be executed in a forever the message *Hello router!"* in the console in a specific frequency.
 
