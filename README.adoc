@@ -227,6 +227,8 @@ image::imgs/bot-2.png[]
 
 image::imgs/bot-3.png[]
 
+As you can see the message content is not the best, use at your own risk :-)
+
 image::imgs/bot-4.png[]
 
 To check the entire list of supported actions in the VR application, access the application route and add the following in the end of the URL: `/webjars/swagger-ui/2.1.0/index.html?url=/camel/api-docs` (Make sure you are not using https)
