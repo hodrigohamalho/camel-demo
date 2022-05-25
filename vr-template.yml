@@ -1,0 +1,139 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: vr-template
+  labels:
+    app: vr-template
+  annotations:
+    openshift.io/display-name: "VR Template"
+    openshift.io/provider-display-name: "Red Hat, Inc."
+    description: "Visual Tool for understanding Kafka Topic, Producer and Consumer"
+    tags: "kafka,amq-streams"
+    version: "1.0"
+message: |-
+  vr is now deployed to ${NAMESPACE}
+parameters:
+- name: NAMESPACE
+  displayName: Namespace
+  required: true
+  description: Namespace in which the prometheus-operator is installed.
+- name: KAFKA_BROKER
+  displayName: Kafka Broker
+  value: 'my-cluster-kafka-bootstrap:9092'
+  required: true
+  description: The broker to connect to
+- name: KAFKA_TOPIC
+  displayName: Kafka Topic
+  value: 'my-topic'
+  required: true
+  description: Kafka topic name
+- name: SUBDOMAIN
+  displayName: Openshift Subdomain
+  required: true
+  description: Openshift subdomain
+
+objects:
+
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      app: camel-vr
+      app.kubernetes.io/component: camel-vr
+      app.kubernetes.io/instance: camel-vr
+      app.kubernetes.io/part-of: vr
+      app.openshift.io/runtime-namespace: demo-kafka
+    name: camel-vr
+    namespace: ${NAMESPACE}
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: camel-vr
+    template:
+      metadata:
+        labels:
+          app: camel-vr
+          deploymentconfig: camel-vr
+      spec:
+        containers:
+        - env:
+          - name: KAFKA_BROKER
+            value: ${KAFKA_BROKER}
+          - name: KAFKA_TOPIC
+            value: ${KAFKA_TOPIC}
+          - name: CAMEL_REST_HOST
+            value: camel-vr-${NAMESPACE}.${SUBDOMAIN}
+          image: docker.io/luszczynski/camel-vr@sha256:2acf3a7a49dad1546b43a994026633a6abe1382692e0b2ed82e1effbc681f4b8
+          name: camel-vr
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          - containerPort: 8290
+            protocol: TCP
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: camel-vr
+      app.kubernetes.io/component: camel-vr
+      app.kubernetes.io/instance: camel-vr
+      app.kubernetes.io/part-of: vr
+      app.openshift.io/runtime-version: latest
+    name: camel-vr
+    namespace: ${NAMESPACE}
+  spec:
+    ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    - name: 8290-tcp
+      port: 8290
+      protocol: TCP
+      targetPort: 8290
+    selector:
+      app: camel-vr
+      deploymentconfig: camel-vr
+    type: ClusterIP
+
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    labels:
+      app: camel-vr
+      app.kubernetes.io/component: camel-vr
+      app.kubernetes.io/instance: camel-vr
+      app.kubernetes.io/part-of: vr
+      app.openshift.io/runtime-version: latest
+    name: camel-vr
+    namespace: ${NAMESPACE}
+  spec:
+    host: camel-vr-${NAMESPACE}.${SUBDOMAIN}
+    port:
+      targetPort: 8290-tcp
+    to:
+      kind: Service
+      name: camel-vr
+      weight: 100
+
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    labels:
+      app: camel-vr
+      app.kubernetes.io/component: camel-vr
+      app.kubernetes.io/instance: camel-vr
+      app.kubernetes.io/part-of: vr
+      app.openshift.io/runtime-version: latest
+    name: camel-vr-swagger
+    namespace: ${NAMESPACE}
+  spec:
+    host: camel-vr-swagger-${NAMESPACE}.${SUBDOMAIN}
+    port:
+      targetPort: 8080-tcp
+    to:
+      kind: Service
+      name: camel-vr
+      weight: 100

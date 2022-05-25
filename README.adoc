@@ -1,0 +1,162 @@
+= Red Hat Fuse ( Camel Demo )
+
+This is a simple demo that consist in two parts. 
+
+. The first one using Camel with Quarkus does not describe a real use case but focuses in show some main core concepts of Camel and how easy it enables to create cloud-native integrations.
+
+. The second one is based on an event-driven architecture scenario where we create a Telegram chatbot using Camel-K. 
+It interacts with the user via a chatbot in Telegram and also publishes the messages on a Kafka topic.
+
+
+== Visual Studio Code Plugins
+
+* https://marketplace.visualstudio.com/items?itemName=redhat.apache-camel-extension-pack[Extension Pack for Apache Camel]
+* https://marketplace.visualstudio.com/items?itemName=redhat.vscode-quarkus[Quarkus Plugin]
+
+== Camel Quarkus
+
+This demo will explore some Camel fundamental concepts:
+
+. Bootstrap a Camel Quarkus project
+. Using Camel Components
+. Using Enterprise Integration Patterns (EIPs)
+. Converting data types
+
+This is the use case that we are going to explore
+
+image::imgs/route-diagram.jpeg[]
+
+Let's generate the project using the Quarkus Bootstrap website.
+
+Download a quarkus project using the https://code.quarkus.redhat.com[Quarkus bootstrap], select the followings extensions:
+
+. camel-quarkus-timer
+. camel-quarkus-log
+. camel-quarkus-bean
+. camel-quarkus-file
+. camel-quarkus-core
+. camel-quarkus-jackson
+. camel-quarkus-jacksonxml
+
+ A Camel Router is a class that extends `RouteBuilder` and implements the configure method. Let's focus on the code that really matters at the moment.
+
+
+[source,java]
+----
+from("timer:generate")
+  .log("Hello router!");
+----
+
+This code is using the timer component, with all default configurations, it will be executed in a forever the message *Hello router!"* in the console in a specific frequency.
+
+Components are the key of Camel. They are flexible and reusable  "libraries" that abstract complex operations making it trivial, boosting developer productivity!
+
+https://camel.apache.org/components/latest[Take a look at the camel components, window="_blank"]
+
+Now, let's use some parameters with timer component to repeat *only 5 times* within the *interval of 1 sec*.
+
+[source,java]
+----
+from("timer:generate?repeatCount=5&period=1000")
+    .log("Hello router!");
+----
+
+image::imgs/quarkus-bootstrap.png[]
+
+== Camel-K
+
+Download Camel-K
+
+https://mirror.openshift.com/pub/openshift-v4/clients/camel-k/1.6.3/camel-k-client-1.6.3-linux-64bit.tar.gz[Download the kamel binary for Linux]
+https://mirror.openshift.com/pub/openshift-v4/clients/camel-k/1.6.3/camel-k-client-1.6.3-mac-64bit.tar.gz[Download the kamel binary for Mac]
+https://mirror.openshift.com/pub/openshift-v4/clients/camel-k/1.6.3/camel-k-client-1.6.3-windows-64bit.tar.gz[Download the kamel binary for Windows]
+
+Change the `application.properties` file with your Telegram credentials.
+
+Create the secret in Openshift
+
+    cd camel-k
+    oc create secret generic telegram-bot --from-file application.properties
+
+RUN
+
+    kamel run Telegram.java --dev --config secret:telegram-bot
+
+Chuck Norris 
+
+    from("telegram:bots")
+        .log("command received ${body}")
+        .convertBodyTo(String.class)
+        .choice()
+            .when(simple("${body} == 'joke'"))
+                .log("action joke triggered")
+                .to("http://api.icndb.com/jokes/random")
+                .unmarshal().json(JsonLibrary.Jackson)
+                .transform(simple("${body[value][joke]}"))
+                .to("telegram:bots")
+            .when(simple("${body} == 'publish'"))
+                .log("action publish triggered")
+            .otherwise()
+                .setBody().simple("Action not found. Supported actions:\n*joke\n*publish")
+                .to("telegram:bots");
+
+Add publish to Kafka 
+
+in the application.properties, add:
+    
+    camel.component.kafka.brokers = my-cluster-kafka-bootstrap:9092
+
+oc delete secret telegram-bot
+oc create secret generic telegram-bot --from-file application.properties
+
+== VR Consumer 
+
+oc process -f vr-template.yml \
+  -p NAMESPACE=fuse-demo \
+  -p KAFKA_BROKER=my-cluster-kafka-bootstrap:9092 \
+  -p KAFKA_TOPIC=my-topic \
+  -p SUBDOMAIN=apps.cluster-b851.b851.sandbox243.opentlc.com \
+  | kubectl apply -f -
+
+Add the following by the end of the url: `/webjars/swagger-ui/2.1.0/index.html?url=/camel/api-docs`
+
+== Camel Quarkus Demo 
+
+Create the `HelloRouter.java` class. Explore the fundamentals of Camel building this example in a step by step approach
+
+    from("timer:hello?repeatCount=3&period=5000")
+        .log("welcome to the camel world")
+        .bean(OrderService.class, "generateOrder")
+        .log("order generated: ${body}")
+        .choice()
+            .when(simple("${body.item} == 'Camel'"))
+                .log("Processing a Camel Book")
+                .marshal().json()
+                .to("file:/tmp/live-demo/camel?fileName=camel-${date:now:yyyy-MM-dd-HHmmssSSS}.json")
+            .otherwise()
+                .log("Processing an ActiveMQ book")
+                .marshal().jacksonxml()
+                .to("file:/tmp/live-demo/activemq?fileName=activemq-${date:now:yyyy-MM-dd-HHmmssSSS}.xml");
+
+There are several things happening here: 
+
+. Usage of multiple components (timer, log, file)
+. How to use parameters
+. Bean Invocation 
+. Integration Patterns (CBR)
+. Data Transformation to XML and JSON
+
+To run the integration use:
+
+    ./mvnw compile quarkus:dev
+
+Explore the dev console: http://localhost:8080/q/dev/
+
+
+=== Deploy in Openshift 
+
+Since you are logged in and in the correct project, use: 
+
+    ./mvnw clean package -Dquarkus.kubernetes.deploy=true -Dquarkus.kubernetes-client.trust-certs=true -DskipTests
+
+
