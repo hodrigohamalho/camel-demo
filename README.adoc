@@ -123,6 +123,8 @@ https://mirror.openshift.com/pub/openshift-v4/clients/camel-k/latest/camel-k-cli
 https://mirror.openshift.com/pub/openshift-v4/clients/camel-k/latest/camel-k-client-1.6.3-mac-64bit.tar.gz[Mac] | 
 https://mirror.openshift.com/pub/openshift-v4/clients/camel-k/latest/camel-k-client-1.6.3-windows-64bit.tar.gz[Windows]
 
+Install the Camel-K Operator.
+
 As we are going to create a Telegram chatbot you will need to https://core.telegram.org/bots[create a bot] and take a note of your bot `api-key`.
 
 Change the `application.properties` file with your Telegram credentials.
