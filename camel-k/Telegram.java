@@ -17,7 +17,7 @@ public class Telegram extends RouteBuilder {
                 .unmarshal().json(JsonLibrary.Jackson)
                 .transform(simple("${body[value][joke]}"))
                 .to("telegram:bots")
-                .to("amqp:queue:ramalho-queue")
+                .to("kafka:my-topic")
             .when(simple("${body} == 'publish'"))
                 .log("action publish triggered")
             .otherwise()

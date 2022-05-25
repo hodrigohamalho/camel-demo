@@ -195,14 +195,18 @@ Returning to the application, uncomment the first line `camel.component.kafka.br
     oc delete secret telegram-bot
     oc create secret generic telegram-bot --from-file application.properties
 
+Run the Camel-K application:
+
+    kamel run Telegram.java --dev --config secret:telegram-bot
+
 To be able to visualize the messages being received in that topic you should deploy the `Camel VR` application. 
 
     oc process -f vr-template.yml \
-    -p NAMESPACE=fuse-demo \
-    -p KAFKA_BROKER=my-cluster-kafka-bootstrap:9092 \
-    -p KAFKA_TOPIC=my-topic \
-    -p SUBDOMAIN=apps.cluster-b851.b851.sandbox243.opentlc.com \
-    | kubectl apply -f -    
+        -p NAMESPACE=fuse-demo \
+        -p KAFKA_BROKER=my-cluster-kafka-bootstrap:9092 \
+        -p KAFKA_TOPIC=my-topic \
+        -p SUBDOMAIN=apps.cluster-fphhv.fphhv.sandbox1022.opentlc.com \
+        | kubectl apply -f -    
 
 Once it's finished you can now, add the following line in your Camel-K route, just after the .to(`telegram:bots`)
 
@@ -210,5 +214,19 @@ Once it's finished you can now, add the following line in your Camel-K route, ju
     .to("kafka:my-topic")
 
 Look in the VR application, the messages being received.
+
+If everything worked fine in your setup, you should see something like that:
+
+image::imgs/camel-k-overview.png[]
+
+And the demo execution, something similar to it
+
+image::imgs/bot-1.png[]
+
+image::imgs/bot-2.png[]
+
+image::imgs/bot-3.png[]
+
+image::imgs/bot-4.png[]
 
 To check the entire list of supported actions in the VR application, access the application route and add the following in the end of the URL: `/webjars/swagger-ui/2.1.0/index.html?url=/camel/api-docs` (Make sure you are not using https)
