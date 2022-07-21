@@ -180,15 +180,15 @@ Now, we are going to not only answer back to telegram but also publish into a Ka
 
 For it, we need a Kafka cluster running, so deploy https://strimz.io[AMQ Streams] in your Openshift with the name `my-cluster`. For this demo you can use all the default values.
 
-image::img/kafka-install.png[]
+image::imgs/kafka-install.png[]
 
 After create a topic, called `my-topic`.
 
-image::img/kafka-topic.png[]
+image::imgs/kafka-topic.png[]
 
 If everything is working fine with your Kafka instance, you must be seeing something like that.
 
-image::img/kafka-installed.png[]
+image::imgs/kafka-installed.png[]
 
 Returning to the application, uncomment the first line `camel.component.kafka.brokers` from the `application.properties` file, and recreate as a secret in Openshift. 
 
@@ -205,7 +205,7 @@ To be able to visualize the messages being received in that topic you should dep
         -p NAMESPACE=fuse-demo \
         -p KAFKA_BROKER=my-cluster-kafka-bootstrap:9092 \
         -p KAFKA_TOPIC=my-topic \
-        -p SUBDOMAIN=apps.cluster-fphhv.fphhv.sandbox1022.opentlc.com \
+        -p SUBDOMAIN=apps.cluster-k42fg.k42fg.sandbox739.opentlc.com \
         | kubectl apply -f -    
 
 Once it's finished you can now, add the following line in your Camel-K route, just after the .to(`telegram:bots`)
